@@ -1,0 +1,3 @@
+UPDATE
+table
+SET field_b = field_a;

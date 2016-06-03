@@ -1,0 +1,10 @@
+
+SELECT * FROM destination_community
+ WHERE (CONVERT(`cmunt_name` USING utf8) LIKE '%florida%')
+ OR (CONVERT(`cmunt_name` USING utf8) LIKE '%beach%')
+
+ 
+SELECT *  FROM destination_community
+ WHERE (CONVERT(`cmunt_name` USING utf8) LIKE '%private%')  
+ OR  (CONVERT(`cmunt_name` USING utf8) LIKE '%homes%')
+ OR  (CONVERT(`cmunt_name` USING utf8) LIKE '%beach%')
