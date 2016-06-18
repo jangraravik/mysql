@@ -1,1 +1,1 @@
-SELECT from_unixtime(inq_date, '%Y %D %M %h:%i:%s')FROM property_inquiry
+SELECT from_unixtime(inq_date, '%Y %D %M %h:%i:%s') FROM property_inquiry
