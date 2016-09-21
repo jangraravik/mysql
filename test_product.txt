@@ -1,0 +1,113 @@
+-- phpMyAdmin SQL Dump
+-- version 4.1.14
+-- http://www.phpmyadmin.net
+--
+-- Host: localhost:3366
+-- Generation Time: Aug 28, 2016 at 02:53 AM
+-- Server version: 5.6.17
+-- PHP Version: 5.5.12
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8 */;
+
+--
+-- Database: `test_product`
+--
+
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `cheap_products`()
+BEGIN
+  SELECT * FROM `cheap_products`;
+END$$
+
+--
+-- Functions
+--
+CREATE DEFINER=`root`@`localhost` FUNCTION `calcProfit`(cost FLOAT, price FLOAT) RETURNS decimal(9,2)
+BEGIN
+  DECLARE profit DECIMAL(9,2);
+  SET profit = price-cost;
+  RETURN profit;
+END$$
+
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `cheap_products`
+--
+CREATE TABLE IF NOT EXISTS `cheap_products` (
+`Item` varchar(20)
+,`Cost` decimal(10,2)
+);
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `products`
+--
+
+CREATE TABLE IF NOT EXISTS `products` (
+  `prod_id` int(11) NOT NULL AUTO_INCREMENT,
+  `prod_name` varchar(20) NOT NULL,
+  `prod_cost` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `prod_price` decimal(10,2) NOT NULL DEFAULT '0.00',
+  PRIMARY KEY (`prod_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=4 ;
+
+--
+-- Dumping data for table `products`
+--
+
+INSERT INTO `products` (`prod_id`, `prod_name`, `prod_cost`, `prod_price`) VALUES
+(1, 'Basic Widget', '2515.96', '2767.56'),
+(2, 'Micro Widget', '4577.07', '5034.78'),
+(3, 'Mega Widget', '6862.27', '7548.50');
+
+--
+-- Triggers `products`
+--
+DROP TRIGGER IF EXISTS `sync_product_price_with_cost`;
+DELIMITER //
+CREATE TRIGGER `sync_product_price_with_cost` BEFORE UPDATE ON `products`
+ FOR EACH ROW BEGIN
+  IF NEW.prod_cost <> OLD.prod_cost
+    THEN
+      SET NEW.prod_price = NEW.prod_cost + (NEW.prod_cost*10/100) ;
+  END IF ;
+END
+//
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `cheap_products`
+--
+DROP TABLE IF EXISTS `cheap_products`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `cheap_products` AS select `products`.`prod_name` AS `Item`,`products`.`prod_cost` AS `Cost` from `products` where (`products`.`prod_cost` >= 100);
+
+DELIMITER $$
+--
+-- Events
+--
+CREATE DEFINER=`root`@`localhost` EVENT `update_price_every_minute` ON SCHEDULE EVERY 1 MINUTE STARTS '2016-08-28 01:02:26' ON COMPLETION NOT PRESERVE ENABLE COMMENT 'update product every minute' DO update 
+    products 
+  SET
+    prod_cost = prod_cost + (prod_cost*10/100)$$
+
+DELIMITER ;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

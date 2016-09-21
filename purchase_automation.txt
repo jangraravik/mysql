@@ -1,0 +1,101 @@
+-- phpMyAdmin SQL Dump
+-- version 4.0.4
+-- http://www.phpmyadmin.net
+--
+-- Host: localhost
+-- Generation Time: Aug 28, 2016 at 07:43 PM
+-- Server version: 5.6.12-log
+-- PHP Version: 5.4.16
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8 */;
+
+--
+-- Database: `purchase_automation`
+--
+CREATE DATABASE IF NOT EXISTS `purchase_automation` DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci;
+USE `purchase_automation`;
+
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `process_purchase`(IN `qtytity` INT, IN `price` DECIMAL(10,2), INOUT `discount` DECIMAL(10,2), INOUT `beforetax` DECIMAL(10,2), INOUT `salestax` DECIMAL(10,2), INOUT `subtotal` DECIMAL(10,2), OUT `total` DECIMAL(10,2), IN `newid` INT)
+begin
+  set discount = if(qtytity >= 10,5,0);
+  set beforetax = price * qtytity * 1 - (discount / 100);
+  set salestax = beforetax * .8 ;
+  set subtotal = beforetax + salestax;
+  set @prior_total = 0;
+  if(newid = 0) then
+    select temptable.total into @prior_total from purchase_automation.purchase as temptable where id != 0 order by id desc limit 1;
+  else
+    select temptable.total into @prior_total from purchase_automation.purchase as temptable where id < newid order by id desc limit 1;
+  end if;
+  set total = subtotal + @prior_total;
+end$$
+
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `purchase`
+--
+
+CREATE TABLE IF NOT EXISTS `purchase` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `item` text NOT NULL,
+  `qty` int(11) NOT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `disc_percent` decimal(10,2) DEFAULT NULL,
+  `pretax` decimal(10,2) DEFAULT NULL,
+  `tax` decimal(10,2) DEFAULT NULL,
+  `subtotal` decimal(10,2) DEFAULT NULL,
+  `total` decimal(10,2) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=9 ;
+
+--
+-- Dumping data for table `purchase`
+--
+
+INSERT INTO `purchase` (`id`, `item`, `qty`, `price`, `disc_percent`, `pretax`, `tax`, `subtotal`, `total`) VALUES
+(1, 'gadgets', 10, '5.98', '5.00', '59.75', '5.08', '64.83', '64.83'),
+(2, 'widgets', 8, '4.33', '0.00', '34.64', '2.94', '37.58', '102.41'),
+(3, 'tools', 16, '32.88', '5.00', '526.03', '44.71', '570.74', '673.15'),
+(4, 'hardware', 34, '2.45', '5.00', '83.25', '7.08', '90.33', '763.48'),
+(5, 'mousetraps', 22, '5.93', '5.00', '130.41', '11.08', '141.49', '904.97'),
+(6, 'Apple', 10, '10.00', '5.00', '99.95', '8.50', '108.45', '1013.42'),
+(7, 'Orange', 10, '7.00', '5.00', '69.95', '559.60', '629.55', '1642.97'),
+(8, 'Avx', 10, '10.00', '5.00', '99.95', '79.96', '179.91', '1822.88');
+
+--
+-- Triggers `purchase`
+--
+DROP TRIGGER IF EXISTS `insert_purchase`;
+DELIMITER //
+CREATE TRIGGER `insert_purchase` BEFORE INSERT ON `purchase`
+ FOR EACH ROW begin
+  call process_purchase(new.qty,new.price,new.disc_percent,new.pretax,new.tax,new.subtotal,new.total,new.id);
+end
+//
+DELIMITER ;
+DROP TRIGGER IF EXISTS `update_purchase`;
+DELIMITER //
+CREATE TRIGGER `update_purchase` BEFORE UPDATE ON `purchase`
+ FOR EACH ROW begin
+  call process_purchase(new.qty,new.price,new.disc_percent,new.pretax,new.tax,new.subtotal,new.total,new.id);
+end
+//
+DELIMITER ;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

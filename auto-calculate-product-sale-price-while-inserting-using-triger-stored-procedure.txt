@@ -1,0 +1,101 @@
+-- phpMyAdmin SQL Dump
+-- version 4.5.5.1
+-- http://www.phpmyadmin.net
+--
+-- Host: 127.0.0.1
+-- Generation Time: Aug 29, 2016 at 08:21 AM
+-- Server version: 5.7.11
+-- PHP Version: 5.6.19
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `products`
+--
+
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `product_auto_set_sale_price` (IN `purchase_price` DECIMAL(10,2), OUT `sale_price` DECIMAL(10,2), IN `newid` INT(11))  BEGIN
+  
+  IF(newid = 0) THEN
+    SELECT temptable.sale_price INTO sale_price FROM products.product AS temptable WHERE prod_id != 0 ORDER BY prod_id LIMIT 1;
+  ELSE
+    SELECT temptable.sale_price INTO sale_price FROM products.product AS temptable WHERE prod_id < newid ORDER BY prod_id LIMIT 1;
+  END IF;
+  SET sale_price = purchase_price*2;
+    END$$
+
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `product`
+--
+
+CREATE TABLE `product` (
+  `prod_id` int(11) NOT NULL,
+  `prod_name` varchar(50) NOT NULL,
+  `purchase_price` decimal(10,2) NOT NULL,
+  `sale_price` decimal(10,2) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `product`
+--
+
+INSERT INTO `product` (`prod_id`, `prod_name`, `purchase_price`, `sale_price`) VALUES
+(1, 'Mouse', '55.00', '155.00'),
+(2, 'Keyboard', '45.00', '90.00'),
+(3, 'Speaker Mini', '120.00', '240.00'),
+(4, 'LED Monitor', '2500.00', '5000.00'),
+(5, 'Pen Drive 3.0', '250.00', '500.00'),
+(6, 'Printer', '3500.00', '7000.00');
+
+--
+-- Triggers `product`
+--
+DELIMITER $$
+CREATE TRIGGER `product_auto_set_sale_price_on_insert` BEFORE INSERT ON `product` FOR EACH ROW BEGIN
+    call product_auto_set_sale_price(new.purchase_price,new.sale_price,new.prod_id);
+    END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `product_auto_set_sale_price_on_update` BEFORE UPDATE ON `product` FOR EACH ROW BEGIN
+	CALL product_auto_set_sale_price(new.purchase_price,new.sale_price,new.prod_id);
+    END
+$$
+DELIMITER ;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `product`
+--
+ALTER TABLE `product`
+  ADD PRIMARY KEY (`prod_id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `product`
+--
+ALTER TABLE `product`
+  MODIFY `prod_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
