@@ -1,3 +1,14 @@
+
+CODE 1
+only salary 
+= SELECT DISTINCT salary FROM emp ORDER by salary DESC LIMIT 0,1
+
+with details
+= SELECT * FROM emp WHERE salary = (SELECT DISTINCT salary FROM emp ORDER by salary DESC LIMIT 0,1)
+
+
+
+CODE 2
 only salary
 = SELECT MAX(salary) FROM emp;
 
