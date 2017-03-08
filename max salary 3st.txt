@@ -1,16 +1,18 @@
 
 CODE 1
 only salary 
-= SELECT DISTINCT salary FROM emp ORDER by salary DESC LIMIT 0,1
+= SELECT DISTINCT salary FROM emp ORDER by salary DESC LIMIT 2,1
 
 with details
-= SELECT * FROM emp WHERE salary = (SELECT DISTINCT salary FROM emp ORDER by salary DESC LIMIT 0,1)
+= SELECT * FROM emp WHERE salary = (SELECT DISTINCT salary FROM emp ORDER by salary DESC LIMIT 2,1)
 
 
 
 CODE 2
-only salary
-= SELECT MAX(salary) FROM emp;
-
-with details
-= SELECT * FROM emp WHERE salary = (SELECT MAX(salary) FROM emp);
+with full details more advance
+= SELECT *
+  FROM emp te1
+  WHERE (3) = (SELECT COUNT( te2.salary)
+               FROM emp te2
+               WHERE te2.salary >= te1.salary
+             )

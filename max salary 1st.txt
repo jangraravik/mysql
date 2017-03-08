@@ -14,3 +14,14 @@ only salary
 
 with details
 = SELECT * FROM emp WHERE salary = (SELECT MAX(salary) FROM emp);
+
+
+
+CODE 3
+with full details more advance
+= SELECT *
+  FROM emp te1
+  WHERE (1) = (SELECT COUNT( te2.salary)
+               FROM emp te2
+               WHERE te2.salary >= te1.salary
+             )
