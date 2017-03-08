@@ -1,0 +1,5 @@
+only salary
+= SELECT MAX(salary) FROM emp;
+
+with details
+= SELECT * FROM emp WHERE salary = (SELECT MAX(salary) FROM emp);
